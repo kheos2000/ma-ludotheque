@@ -1,0 +1,11 @@
+MA LUDOTHEQUE - app familiale (version 21)
+
+Publier sur GitHub Pages (gratuit) :
+1. Sur github.com, cree un depot PUBLIC nomme ma-ludotheque.
+2. "Add file" > "Upload files" : glisse tous les fichiers de ce dossier (sauf ce LISEZMOI), puis "Commit changes".
+3. Settings > Pages > Source : "Deploy from a branch", branche main, dossier /(root), Save.
+4. Apres 1 a 2 minutes, l'adresse est : https://kheos2000.github.io/ma-ludotheque/
+5. Sur iPhone : ouvre l'adresse dans Safari > Partager > "Sur l'ecran d'accueil".
+   Sur Android : menu du navigateur > "Installer l'application".
+
+Premiere connexion : cree ton compte avec ton e-mail, puis Reglages > "Importer une sauvegarde" avec ton fichier ma-ludotheque-avec-jaquettes.json.

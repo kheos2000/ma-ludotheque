@@ -384,7 +384,7 @@ html .tabbar { top: 0; }
     </div>
     <p class="hint" id="scanHint" hidden>Place le code-barres du dos de la boîte dans le cadre, bien éclairé, à 15–20 cm. Touche l’écran pour faire la mise au point.</p>
     <div id="reader" hidden></div>
-    <div id="readerFile" hidden></div>
+    
     <div class="form-grid" style="margin-top:10px;">
       <label class="lbl" style="grid-column: 1 / -1;">Code-barres (facultatif)
         <input class="field" id="mBarcode" type="text" inputmode="numeric" placeholder="Scanné ou tapé ici" maxlength="20">
@@ -438,13 +438,13 @@ html .tabbar { top: 0; }
     </div>
     <p class="status info" id="status2" role="status" aria-live="polite"></p>
     <div class="row"><button type="button" class="btn danger" id="btnOut">Se déconnecter</button></div>
-    <p class="sync">Version de l’app : 23 · bêta famille</p>
+    <p class="sync">Version de l’app : 24 · bêta famille</p>
   </section>
 </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/barcode-detector@3.0.5/dist/iife/ponyfill.js"></script>
 <script>
 (function () {
   'use strict';
@@ -949,7 +949,6 @@ html .tabbar { top: 0; }
   }
 
   /* ---------- Onglet Ajouter ---------- */
-  var scanner = null;
   function paintChosen() {
     var box = $('#mChosen');
     box.textContent = '';
@@ -982,20 +981,25 @@ html .tabbar { top: 0; }
       box.append(h('p', { class: 'hint', text: 'La recherche de jaquettes est indisponible pour le moment. Tu peux ajouter le jeu sans jaquette.' }));
     }
   }
-  async function stopScan() {
-    if (!scanner) return;
-    try { await scanner.stop(); } catch (e) { /* déjà arrêté */ }
-    try { scanner.clear(); } catch (e) { /* ignore */ }
-    scanner = null;
-    $('#reader').hidden = true; $('#scanHint').hidden = true;
+  var scanRun = null;
+  var detector = null;
+  function getDetector() {
+    if (detector) return detector;
+    var API = window.BarcodeDetectionAPI;
+    var Ctor = (API && API.BarcodeDetector) || window.BarcodeDetector;
+    if (!Ctor) return null;
+    detector = new Ctor({ formats: ['ean_13', 'upc_a', 'ean_8', 'upc_e', 'code_128'] });
+    return detector;
+  }
+  function stopScan() {
+    if (scanRun) {
+      scanRun.stop = true;
+      try { scanRun.stream.getTracks().forEach(function (t) { t.stop(); }); } catch (e) { /* ignore */ }
+      scanRun = null;
+    }
+    var r = $('#reader');
+    r.textContent = ''; r.hidden = true; $('#scanHint').hidden = true;
     $('#btnScan').textContent = 'Scanner le code-barres';
-  }
-  function scanFormats() {
-    var F = window.Html5QrcodeSupportedFormats;
-    return F ? [F.EAN_13, F.UPC_A, F.EAN_8, F.UPC_E, F.CODE_128, F.QR_CODE] : undefined;
-  }
-  function scanOpts() {
-    return { formatsToSupport: scanFormats(), experimentalFeatures: { useBarCodeDetectorIfSupported: true }, verbose: false };
   }
   function onCode(text) {
     var digits = String(text).replace(/\D/g, '');
@@ -1004,40 +1008,86 @@ html .tabbar { top: 0; }
     runSearch({ barcode: $('#mBarcode').value });
   }
   async function toggleScan() {
-    if (scanner) { await stopScan(); return; }
-    if (!window.Html5Qrcode) { say('Le scanner n’est pas disponible. Tape le code à la main.', 'err'); return; }
-    $('#reader').hidden = false; $('#scanHint').hidden = false;
-    $('#btnScan').textContent = 'Arrêter le scan';
-    scanner = new window.Html5Qrcode('reader', scanOpts());
-    var cfg = {
-      fps: 15,
-      qrbox: function (w) { var bw = Math.min(w - 16, 360); return { width: bw, height: Math.round(bw * 0.5) }; },
-      videoConstraints: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 }, advanced: [{ focusMode: 'continuous' }] }
-    };
+    if (scanRun) { stopScan(); return; }
+    var det = getDetector();
+    if (!det) { say('Le lecteur n’est pas encore chargé. Réessaie dans un instant, ou tape le code à la main.', 'err'); return; }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { say('Caméra non disponible ici. Utilise « Lire depuis une photo ».', 'err'); return; }
+    var stream;
     try {
-      await scanner.start({ facingMode: 'environment' }, cfg, async function (text) { await stopScan(); onCode(text); }, function () { /* image sans code */ });
+      stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } } });
     } catch (e) {
-      try {
-        delete cfg.videoConstraints;
-        await scanner.start({ facingMode: 'environment' }, cfg, async function (text) { await stopScan(); onCode(text); }, function () { /* image sans code */ });
-      } catch (e2) {
-        scanner = null; $('#reader').hidden = true; $('#scanHint').hidden = true; $('#btnScan').textContent = 'Scanner le code-barres';
-        say('Impossible d’ouvrir la caméra. Autorise-la dans les réglages du navigateur, ou utilise « Lire depuis une photo ».', 'err');
-      }
+      say('Impossible d’ouvrir la caméra. Autorise-la dans les réglages du navigateur, ou utilise « Lire depuis une photo ».', 'err');
+      return;
     }
+    var track = stream.getVideoTracks()[0];
+    var caps = {};
+    try { caps = track.getCapabilities ? track.getCapabilities() : {}; } catch (e) { caps = {}; }
+    try {
+      if (caps.focusMode && caps.focusMode.indexOf('continuous') >= 0) await track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
+    } catch (e) { /* ignore */ }
+    var video = h('video', { autoplay: '', muted: '', playsinline: '' });
+    video.muted = true; video.setAttribute('playsinline', ''); video.srcObject = stream;
+    var r = $('#reader');
+    r.textContent = ''; r.append(video);
+    if (caps.zoom && caps.zoom.max > caps.zoom.min) {
+      var z = h('input', { type: 'range', min: caps.zoom.min, max: Math.min(caps.zoom.max, caps.zoom.min + 3), step: caps.zoom.step || 0.1, 'aria-label': 'Zoom', style: 'width:100%;margin-top:8px;' });
+      z.value = caps.zoom.min;
+      z.addEventListener('input', function () { track.applyConstraints({ advanced: [{ zoom: Number(z.value) }] }).catch(function () { /* ignore */ }); });
+      r.append(z);
+    }
+    r.hidden = false; $('#scanHint').hidden = false;
+    $('#btnScan').textContent = 'Arrêter le scan';
+    var run = { stop: false, stream: stream };
+    scanRun = run;
+    try { await video.play(); } catch (e) { /* autoplay */ }
+    var canvas = document.createElement('canvas');
+    var busy = false;
+    async function tick() {
+      if (run.stop) return;
+      if (!busy && video.videoWidth > 0) {
+        busy = true;
+        try {
+          var codes = await det.detect(video);
+          if (!codes.length) {
+            /* 2e essai : zone centrale agrandie */
+            var vw = video.videoWidth, vh = video.videoHeight;
+            var cw = Math.round(vw * 0.9), ch = Math.round(vh * 0.5);
+            canvas.width = cw; canvas.height = ch;
+            canvas.getContext('2d').drawImage(video, (vw - cw) / 2, (vh - ch) / 2, cw, ch, 0, 0, cw, ch);
+            codes = await det.detect(canvas);
+          }
+          if (codes.length && !run.stop) {
+            stopScan();
+            if (navigator.vibrate) { try { navigator.vibrate(60); } catch (e) { /* ignore */ } }
+            onCode(codes[0].rawValue);
+            return;
+          }
+        } catch (e) { /* image suivante */ }
+        busy = false;
+      }
+      setTimeout(tick, 120);
+    }
+    tick();
   }
   async function scanPhoto(file) {
     if (!file) return;
-    if (!window.Html5Qrcode) { say('Le scanner n’est pas disponible.', 'err'); return; }
+    var det = getDetector();
+    if (!det) { say('Le lecteur n’est pas encore chargé. Réessaie dans un instant.', 'err'); return; }
     say('Lecture de la photo…', 'info');
-    var s = new window.Html5Qrcode('readerFile', scanOpts());
     try {
-      var text = await s.scanFile(file, false);
-      onCode(text);
+      var bmp = await createImageBitmap(file);
+      var codes = await det.detect(bmp);
+      if (!codes.length) {
+        var c = document.createElement('canvas'), k = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+        c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+        c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+        codes = await det.detect(c);
+      }
+      if (!codes.length) throw new Error('none');
+      onCode(codes[0].rawValue);
     } catch (e) {
       say('Aucun code-barres lisible sur cette photo. Rapproche-toi, évite les reflets, ou tape le numéro.', 'err');
     }
-    try { s.clear(); } catch (e) { /* ignore */ }
   }
 
   /* ---------- Export / import ---------- */

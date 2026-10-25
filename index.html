@@ -327,7 +327,7 @@ html .tabbar { top: 0; }
 .tabbar { grid-template-columns: repeat(5, 1fr); gap: 2px; padding-left: 6px; padding-right: 6px; }
 .navtab { font-size: 11px; padding: 8px 2px; }
 .cons-h { margin: 18px 0 6px; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
-.cons-row { display: grid; grid-template-columns: 72px 1fr auto; align-items: center; gap: 12px; padding: 8px 4px; border-bottom: 1px solid var(--line); }
+.cons-row { display: grid; grid-template-columns: 92px minmax(0,1fr) auto; align-items: center; gap: 12px; padding: 8px 4px; border-bottom: 1px solid var(--line); }
 .cons-logo { width: 92px; height: 58px; display: grid; place-items: center; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 4px; }
 .cons-logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
 .cons-logo .ph { color: #333; font-weight: 700; font-size: 13px; }
@@ -348,6 +348,9 @@ html .tabbar { top: 0; }
 .shelf-h { font-size: 18px; }
 .shelf-logo { display: grid; place-items: center; width: 76px; height: 44px; flex: none; background: #fff; border-radius: 9px; padding: 3px 6px; }
 .shelf-logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+.chip-name { font-size: 13px; font-weight: 600; white-space: nowrap; }
+.chip.has-logo { gap: 8px; }
 
 </style>
 </head>
@@ -481,7 +484,7 @@ html .tabbar { top: 0; }
     </div>
     <p class="status info" id="status2" role="status" aria-live="polite"></p>
     <div class="row"><button type="button" class="btn danger" id="btnOut">Se déconnecter</button></div>
-    <p class="sync">Photos des consoles : Wikimedia Commons (licences libres).<br>Version de l’app : 32 · bêta famille</p>
+    <p class="sync">Photos des consoles : Wikimedia Commons (licences libres).<br>Version de l’app : 33 · bêta famille</p>
   </section>
 </div>
 </div>
@@ -1322,7 +1325,7 @@ html .tabbar { top: 0; }
     p.names.forEach(function (n) {
       var u = logoUrl(n);
       var inner = u
-        ? [h('span', { class: 'chip-logo' }, h('img', { src: u, 'data-logo': logoOf(n), alt: '', loading: 'lazy', referrerpolicy: 'no-referrer', onerror: function (e) { var t = e.target; t.replaceWith(h('span', { class: 'chip-txt', text: n })); } })), h('b', { text: String(p.counts[n]) })]
+        ? [h('span', { class: 'chip-logo' }, h('img', { src: u, 'data-logo': logoOf(n), alt: '', loading: 'lazy', referrerpolicy: 'no-referrer', onerror: function (e) { var t = e.target; t.replaceWith(h('span', { class: 'chip-txt', text: n })); } })), h('span', { class: 'chip-name', text: n }), h('b', { text: String(p.counts[n]) })]
         : [h('i'), n + ' ', h('b', { text: String(p.counts[n]) })];
       var chip = h('button', { type: 'button', class: 'chip' + (u ? ' has-logo' : ''), title: n, 'aria-label': n + ' : ' + p.counts[n] + ' jeu' + (p.counts[n] > 1 ? 'x' : ''), 'aria-pressed': String(state.filterPlat === n), onclick: function () { state.filterPlat = (state.filterPlat === n) ? null : n; state.page = 0; render(); } });
       inner.forEach(function (c) { chip.append(c); });

@@ -381,9 +381,6 @@ html .tabbar { top: 0; }
         <input class="sr" type="file" id="fileCover" accept="image/*" capture="environment" aria-label="Photographier la jaquette du jeu">
       </label>
       <button type="button" class="btn" id="btnScan">Scanner le code-barres</button>
-      <label class="btn">Lire un code-barres sur photo
-        <input class="sr" type="file" id="filePhoto" accept="image/*" capture="environment" aria-label="Photographier le code-barres">
-      </label>
     </div>
     <p class="hint" id="scanHint" hidden>Place le code-barres du dos de la boîte dans le cadre, bien éclairé, à 15–20 cm. Touche l’écran pour faire la mise au point.</p>
     <div id="reader" hidden></div>
@@ -441,7 +438,7 @@ html .tabbar { top: 0; }
     </div>
     <p class="status info" id="status2" role="status" aria-live="polite"></p>
     <div class="row"><button type="button" class="btn danger" id="btnOut">Se déconnecter</button></div>
-    <p class="sync">Version de l’app : 26 · bêta famille</p>
+    <p class="sync">Version de l’app : 27 · bêta famille</p>
   </section>
 </div>
 </div>
@@ -1234,7 +1231,6 @@ html .tabbar { top: 0; }
     $('#mPlatform').addEventListener('change', function () { lastPlatSet($('#mPlatform').value); });
     $('#btnScan').addEventListener('click', toggleScan);
     $('#fileCover').addEventListener('change', function (e) { coverPhoto(e.target.files && e.target.files[0]); e.target.value = ''; });
-    $('#filePhoto').addEventListener('change', function (e) { scanPhoto(e.target.files && e.target.files[0]); e.target.value = ''; });
     $('#btnFind').addEventListener('click', function () {
       var t = $('#mTitle').value.trim();
       if (!t) { $('#mTitle').focus(); return; }

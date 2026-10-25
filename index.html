@@ -438,7 +438,7 @@ html .tabbar { top: 0; }
     </div>
     <p class="status info" id="status2" role="status" aria-live="polite"></p>
     <div class="row"><button type="button" class="btn danger" id="btnOut">Se déconnecter</button></div>
-    <p class="sync">Version de l’app : 24 · bêta famille</p>
+    <p class="sync">Version de l’app : 25 · bêta famille</p>
   </section>
 </div>
 </div>
@@ -971,7 +971,8 @@ html .tabbar { top: 0; }
       if (body.barcode && !(d.items || []).length) {
         box.textContent = '';
         if (d.hint) $('#mTitle').value = d.hint;
-        box.append(h('p', { class: 'hint', text: 'Code-barres non reconnu. Tape le titre puis clique sur « Chercher la jaquette ».' }));
+        box.append(h('p', { class: 'hint', text: 'Code-barres inconnu pour l’instant. Tape le titre : la prochaine fois, ce code sera reconnu tout seul.' }));
+        $('#mTitle').focus();
         return;
       }
       if (body.barcode && d.items.length === 1) applyCand(d.items[0]);
@@ -1214,6 +1215,11 @@ html .tabbar { top: 0; }
       try {
         await putItem(makeItem({ title: title, platform: plat, region: $('#mRegion').value, condition: $('#mCondition').value, notes: $('#mNotes').value, barcode: $('#mBarcode').value.trim(), thumb: DRAFT_COVER.v }));
         say('Ajouté : ' + title, 'ok');
+        var bc = $('#mBarcode').value.replace(/\D/g, '');
+        if (bc.length >= 8 && bc.length <= 14) {
+          var cv = /^https:\/\/images\.igdb\.com\//.test(DRAFT_COVER.v || '') ? DRAFT_COVER.v : null;
+          sb.from('barcodes').upsert({ barcode: bc, title: title.slice(0, 140), platform: plat, cover: cv, updated_at: new Date().toISOString() }).then(function () { /* mémoire partagée */ }, function () { /* ignore */ });
+        }
         $('#mTitle').value = ''; $('#mNotes').value = ''; $('#mBarcode').value = ''; $('#mCands').textContent = ''; DRAFT_COVER.v = ''; paintChosen();
         $('#mTitle').focus();
       } catch (e) { say(dbErr(e), 'err'); }

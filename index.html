@@ -319,6 +319,11 @@ html .tabbar { top: 0; }
 .g-edit { white-space: nowrap; width: 112px; }
 #reader video { width: 100% !important; }
 
+.hint.wait { display: flex; align-items: center; gap: 10px; }
+.spinner { width: 20px; height: 20px; flex: none; border-radius: 50%; border: 3px solid #d9dbe8; border-top-color: #d63d6b; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2.4s; } }
+
 </style>
 </head>
 <body>
@@ -438,7 +443,7 @@ html .tabbar { top: 0; }
     </div>
     <p class="status info" id="status2" role="status" aria-live="polite"></p>
     <div class="row"><button type="button" class="btn danger" id="btnOut">Se déconnecter</button></div>
-    <p class="sync">Version de l’app : 28 · bêta famille</p>
+    <p class="sync">Version de l’app : 29 · bêta famille</p>
   </section>
 </div>
 </div>
@@ -965,7 +970,7 @@ html .tabbar { top: 0; }
   async function runSearch(body) {
     var box = $('#mCands');
     box.textContent = '';
-    box.append(h('p', { class: 'hint', text: 'Recherche en cours…' }));
+    box.append(h('p', { class: 'hint wait', role: 'status' }, h('span', { class: 'spinner', 'aria-hidden': 'true' }), h('span', { text: 'Recherche en cours…' })));
     try {
       var d = await coverSearch(body);
       if (body.barcode && !(d.items || []).length) {
@@ -1074,7 +1079,7 @@ html .tabbar { top: 0; }
     if (!file) return;
     var box = $('#mCands');
     box.textContent = '';
-    box.append(h('p', { class: 'hint', text: 'Reconnaissance de la jaquette…' }));
+    box.append(h('p', { class: 'hint wait', role: 'status' }, h('span', { class: 'spinner', 'aria-hidden': 'true' }), h('span', { text: 'Reconnaissance de la jaquette… (quelques secondes)' })));
     try {
       var bmp = await createImageBitmap(file);
       var k = Math.min(1, 1024 / Math.max(bmp.width, bmp.height));

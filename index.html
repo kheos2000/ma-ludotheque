@@ -438,7 +438,7 @@ html .tabbar { top: 0; }
     </div>
     <p class="status info" id="status2" role="status" aria-live="polite"></p>
     <div class="row"><button type="button" class="btn danger" id="btnOut">Se déconnecter</button></div>
-    <p class="sync">Version de l’app : 27 · bêta famille</p>
+    <p class="sync">Version de l’app : 28 · bêta famille</p>
   </section>
 </div>
 </div>
@@ -1081,7 +1081,7 @@ html .tabbar { top: 0; }
       var c = document.createElement('canvas');
       c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
       c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
-      var d = await coverSearch({ image: c.toDataURL('image/jpeg', 0.8) });
+      var d = await Promise.race([coverSearch({ image: c.toDataURL('image/jpeg', 0.8) }), new Promise(function (_, rej) { setTimeout(function () { rej(new Error('délai dépassé')); }, 45000); })]);
       if (!(d.items || []).length) {
         box.textContent = '';
         if (d.hint) $('#mTitle').value = d.hint;
@@ -1097,8 +1097,10 @@ html .tabbar { top: 0; }
       showCands(box, d.items, applyCand, $('#mPlatform').value);
       say('Reconnu : ' + d.items[0].title, 'ok');
     } catch (e) {
+      var detail = '';
+      try { detail = e && e.context && e.context.text ? await e.context.text() : String((e && e.message) || ''); } catch (e2) { detail = ''; }
       box.textContent = '';
-      box.append(h('p', { class: 'hint', text: 'La reconnaissance par photo est indisponible pour le moment. Tape le titre ou scanne le code-barres.' }));
+      box.append(h('p', { class: 'hint', text: 'La reconnaissance par photo a échoué. Tape le titre ou scanne le code-barres. ' + String(detail).slice(0, 260) }));
     }
   }
   async function scanPhoto(file) {

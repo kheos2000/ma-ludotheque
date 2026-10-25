@@ -326,9 +326,11 @@ html .tabbar { top: 0; }
   <section class="card" aria-labelledby="authH">
     <h1 id="authH">Ma Ludothèque</h1>
     <p class="hint" id="authSub">Connecte-toi pour retrouver ta collection sur tous tes appareils.</p>
-    <input class="field" id="aEmail" type="email" placeholder="Adresse e-mail" autocomplete="email" aria-label="Adresse e-mail">
-    <input class="field" id="aPass" type="password" placeholder="Mot de passe (8 caractères minimum)" autocomplete="current-password" aria-label="Mot de passe">
-    <button type="button" class="btn primary" id="aGo">Se connecter</button>
+    <form id="authForm" style="display:grid;gap:12px;" method="post" action="#">
+      <input class="field" id="aEmail" name="username" type="email" placeholder="Adresse e-mail" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" aria-label="Adresse e-mail" required>
+      <input class="field" id="aPass" name="password" type="password" placeholder="Mot de passe (8 caractères minimum)" autocomplete="current-password" aria-label="Mot de passe" required>
+      <button type="submit" class="btn primary" id="aGo">Se connecter</button>
+    </form>
     <button type="button" class="btn" id="aSwitch">Créer un compte</button>
     <p class="status info" id="aMsg" role="status" aria-live="polite"></p>
   </section>
@@ -436,7 +438,7 @@ html .tabbar { top: 0; }
     </div>
     <p class="status info" id="status2" role="status" aria-live="polite"></p>
     <div class="row"><button type="button" class="btn danger" id="btnOut">Se déconnecter</button></div>
-    <p class="sync">Version de l’app : 22 · bêta famille</p>
+    <p class="sync">Version de l’app : 23 · bêta famille</p>
   </section>
 </div>
 </div>
@@ -1173,8 +1175,7 @@ html .tabbar { top: 0; }
     $('#btnJson').addEventListener('click', exportJson);
     $('#fileImport').addEventListener('change', function (e) { var f = e.target.files && e.target.files[0]; importJson(f); e.target.value = ''; });
     $('#btnOut').addEventListener('click', function () { sb.auth.signOut(); });
-    $('#aGo').addEventListener('click', doAuth);
-    $('#aPass').addEventListener('keydown', function (e) { if (e.key === 'Enter') doAuth(); });
+    $('#authForm').addEventListener('submit', function (e) { e.preventDefault(); doAuth(); });
     $('#aSwitch').addEventListener('click', function () { setAuthMode(authMode === 'in' ? 'up' : 'in'); });
     document.querySelectorAll('.navtab').forEach(function (b) { b.addEventListener('click', function () { showTab(b.getAttribute('data-tab')); }); });
   }
@@ -1184,6 +1185,7 @@ html .tabbar { top: 0; }
     else if (ev === 'SIGNED_OUT' || !session) leave();
   });
   sb.auth.getSession().then(function (r) { if (!(r.data && r.data.session)) leave(); });
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) { /* ignore */ }
   if ('serviceWorker' in navigator) { window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () { /* ignore */ }); }); }
 
 })();

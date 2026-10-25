@@ -324,6 +324,19 @@ html .tabbar { top: 0; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2.4s; } }
 
+.tabbar { grid-template-columns: repeat(5, 1fr); gap: 2px; padding-left: 6px; padding-right: 6px; }
+.navtab { font-size: 11px; padding: 8px 2px; }
+.cons-h { margin: 18px 0 6px; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.cons-row { display: grid; grid-template-columns: 72px 1fr auto; align-items: center; gap: 12px; padding: 8px 4px; border-bottom: 1px solid var(--line); }
+.cons-logo { width: 72px; height: 44px; display: grid; place-items: center; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 4px; }
+.cons-logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.cons-logo .ph { color: #333; font-weight: 700; font-size: 13px; }
+.cons-name { display: grid; gap: 2px; min-width: 0; }
+.cons-name b { font-size: 15px; overflow-wrap: anywhere; }
+.cons-name span { font-size: 12px; color: var(--muted); }
+.cons-sw { min-width: 76px; padding: 8px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); font: 700 13px inherit; cursor: pointer; }
+.cons-row.on .cons-sw { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; border-color: transparent; }
+
 </style>
 </head>
 <body>
@@ -346,6 +359,7 @@ html .tabbar { top: 0; }
   <button type="button" class="navtab" role="tab" data-tab="coll" aria-selected="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>Collection</button>
   <button type="button" class="navtab" role="tab" data-tab="find" aria-selected="false"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>Je l’ai ?</button>
   <button type="button" class="navtab add" role="tab" data-tab="add" aria-selected="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Ajouter</button>
+  <button type="button" class="navtab" role="tab" data-tab="cons" aria-selected="false"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="10" rx="3"/><path d="M8 11v4M6 13h4M16 12h.01M18 14h.01"/></svg>Consoles</button>
   <button type="button" class="navtab" role="tab" data-tab="more" aria-selected="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg>Réglages</button>
 </nav>
 
@@ -429,6 +443,18 @@ html .tabbar { top: 0; }
   </section>
 </div>
 
+<div data-view="cons" hidden>
+  <section class="card" aria-labelledby="consH">
+    <h2 id="consH">Mes consoles</h2>
+    <p class="hint" id="consSum"></p>
+    <div class="row" id="consFilter" role="group" aria-label="Filtrer les consoles">
+      <button type="button" class="chip" data-f="all" aria-pressed="true">Toutes</button>
+      <button type="button" class="chip" data-f="yes" aria-pressed="false">Je l’ai</button>
+      <button type="button" class="chip" data-f="no" aria-pressed="false">Je ne l’ai pas</button>
+    </div>
+    <div id="consList"></div>
+  </section>
+</div>
 <div data-view="more" hidden>
   <section class="card foot" aria-labelledby="footH">
     <h2 id="footH">Compte et sauvegarde</h2>
@@ -443,7 +469,7 @@ html .tabbar { top: 0; }
     </div>
     <p class="status info" id="status2" role="status" aria-live="polite"></p>
     <div class="row"><button type="button" class="btn danger" id="btnOut">Se déconnecter</button></div>
-    <p class="sync">Version de l’app : 29 · bêta famille</p>
+    <p class="sync">Version de l’app : 30 · bêta famille</p>
   </section>
 </div>
 </div>
@@ -1210,7 +1236,64 @@ html .tabbar { top: 0; }
     $('#aGo').disabled = false;
   }
 
-  function render() { renderChips(); renderList(); }
+
+  /* ---------- Onglet Consoles ---------- */
+  var LOGOS = {"NES": "plmo", "Super Nintendo": "ifw2tvdkynyxayquiyk4", "Nintendo 64": "pl78", "GameCube": "pl7a", "Wii": "pl92", "Wii U": "pl6n", "Switch": "plgu", "Switch 2": "plow", "Game Boy": "pl7m", "Game Boy Color": "pl7l", "Game Boy Advance": "pl74", "Virtual Boy": "pl7s", "Nintendo DS": "pl6t", "Nintendo 3DS": "pln6", "PlayStation": "plmb", "PlayStation 2": "pl72", "PlayStation 3": "tuyy1nrqodtmbqajp4jg", "PlayStation 4": "pl6f", "PlayStation 5": "plos", "PSP": "pl5y", "PS Vita": "pl6g", "Xbox": "pl7e", "Xbox 360": "plha", "Xbox One": "pl95", "Xbox Series X|S": "plfl", "32X": "pl7r", "Saturn": "hrmqljpwunky1all3v78", "Dreamcast": "pl7i", "Game Gear": "pl7z", "Atari 2600": "pln4", "Atari 5200": "pl8g", "Atari 7800": "pl8f", "Atari Lynx": "pl82", "Atari Jaguar": "pl7y", "Atari 8 bits (400/800/XL/XE)": "plad", "Atari ST": "pla7", "PC Engine / TurboGrafx-16": "pl88", "Neo Geo AES": "plp1", "Neo Geo CD": "pl7t", "Neo Geo Pocket": "plau", "3DO": "pl7u", "Philips CD-i": "pl80", "Amiga CD32": "pl7v", "ColecoVision": "pl8n", "Intellivision": "pl8o", "Vectrex": "pl8h", "Magnavox Odyssey 2 / Videopac": "fqwnmmpanb5se6ebccm3", "Fairchild Channel F": "pl8s", "WonderSwan": "pl7b", "N-Gage": "pl76", "Game.com": "plgk", "Amstrad CPC": "plnh", "Amstrad GX4000": "plot", "ZX Spectrum": "plab", "Commodore 64": "pll3", "Commodore VIC-20": "pl8p", "Commodore 16 / Plus/4": "plf4", "MSX / MSX2": "pl8j", "Thomson TO7 / MO5 / TO8": "plex", "Apple II": "pl8r", "BBC Micro / Electron": "pl86", "Dragon 32 / 64": "pl8e", "Sharp X68000": "pl8i", "Tandy TRS-80 / Color Computer": "plac", "PC (Windows)": "plim", "PC (MS-DOS)": "sqgw6vespav1buezgjjn", "Mac": "plo3"};
+  var consState = { map: {}, filter: 'all', loaded: false };
+  function logoUrl(name) { return LOGOS[name] ? 'https://images.igdb.com/igdb/image/upload/t_logo_med/' + LOGOS[name] + '.png' : ''; }
+  function gamesOn(name) { return state.items.filter(function (x) { return x.platform === name; }).length; }
+  function isOwned(name) {
+    var r = consState.map[name];
+    return r ? !!r.owned : gamesOn(name) > 0;
+  }
+  async function loadConsoles() {
+    try {
+      var r = await sb.from('consoles').select('platform,owned,notes');
+      if (r.error) throw r.error;
+      consState.map = {};
+      (r.data || []).forEach(function (x) { consState.map[x.platform] = x; });
+      consState.loaded = true;
+    } catch (e) { consState.loaded = false; }
+  }
+  async function toggleConsole(name) {
+    var next = !isOwned(name);
+    var prev = consState.map[name];
+    consState.map[name] = { platform: name, owned: next, notes: prev ? prev.notes : '' };
+    renderConsoles();
+    try {
+      var r = await sb.from('consoles').upsert({ platform: name, owned: next, updated_at: new Date().toISOString() }, { onConflict: 'user_id,platform' });
+      if (r.error) throw r.error;
+    } catch (e) {
+      if (prev) consState.map[name] = prev; else delete consState.map[name];
+      renderConsoles(); say('Impossible d’enregistrer ce changement.', 'err');
+    }
+  }
+  function renderConsoles() {
+    var box = $('#consList');
+    if (!box) return;
+    box.textContent = '';
+    var total = PLATFORMS.length, have = PLATFORMS.filter(function (p) { return isOwned(p.name); }).length;
+    $('#consSum').textContent = 'Tu possèdes ' + have + ' console' + (have > 1 ? 's' : '') + ' sur ' + total + ' listées.';
+    document.querySelectorAll('#consFilter .chip').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-f') === consState.filter)); });
+    MAKERS.forEach(function (m) {
+      var rows = m.platforms.filter(function (n) {
+        var o = isOwned(n);
+        return consState.filter === 'all' || (consState.filter === 'yes' ? o : !o);
+      });
+      if (!rows.length) return;
+      box.append(h('h3', { class: 'cons-h', text: m.name }));
+      rows.forEach(function (n) {
+        var o = isOwned(n), c = gamesOn(n), u = logoUrl(n);
+        var pic = u ? h('img', { src: u, alt: '', loading: 'lazy', referrerpolicy: 'no-referrer' }) : h('div', { class: 'ph', text: initials(n) });
+        box.append(h('div', { class: 'cons-row' + (o ? ' on' : '') },
+          h('div', { class: 'cons-logo' }, pic),
+          h('div', { class: 'cons-name' }, h('b', { text: n }), h('span', { text: c ? c + ' jeu' + (c > 1 ? 'x' : '') : 'aucun jeu' })),
+          h('button', { type: 'button', class: 'cons-sw', role: 'switch', 'aria-checked': String(o), 'aria-label': n + ' : ' + (o ? 'je l’ai' : 'je ne l’ai pas'), onclick: function () { toggleConsole(n); } }, h('span', { text: o ? 'Je l’ai' : 'Non' }))));
+      });
+    });
+    if (!box.firstChild) box.append(h('p', { class: 'hint', text: 'Aucune console dans ce filtre.' }));
+  }
+  function render() { renderChips(); renderList(); renderConsoles(); }
   function showTab(name) {
     if (name !== 'add') stopScan();
     document.querySelectorAll('[data-view]').forEach(function (v) { v.hidden = v.getAttribute('data-view') !== name; });
@@ -1223,6 +1306,7 @@ html .tabbar { top: 0; }
     $('#auth').hidden = true; $('#app').hidden = false;
     $('#who').textContent = 'Connecté : ' + (user.email || '');
     try { await loadAll(); } catch (e) { say('Impossible de charger ta collection.', 'err'); }
+    await loadConsoles();
     render(); showTab('coll');
   }
   function leave() {
@@ -1237,6 +1321,7 @@ html .tabbar { top: 0; }
     fillSimpleSelect($('#mCondition'), CONDITIONS, '', CONDITION_LABEL);
     $('#mPlatform').addEventListener('change', function () { lastPlatSet($('#mPlatform').value); });
     $('#btnScan').addEventListener('click', toggleScan);
+    document.querySelectorAll('#consFilter .chip').forEach(function (b) { b.addEventListener('click', function () { consState.filter = b.getAttribute('data-f'); renderConsoles(); }); });
     $('#fileCover').addEventListener('change', function (e) { coverPhoto(e.target.files && e.target.files[0]); e.target.value = ''; });
     $('#btnFind').addEventListener('click', function () {
       var t = $('#mTitle').value.trim();

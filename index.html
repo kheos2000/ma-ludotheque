@@ -328,7 +328,7 @@ html .tabbar { top: 0; }
 .navtab { font-size: 11px; padding: 8px 2px; }
 .cons-h { margin: 18px 0 6px; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 .cons-row { display: grid; grid-template-columns: 72px 1fr auto; align-items: center; gap: 12px; padding: 8px 4px; border-bottom: 1px solid var(--line); }
-.cons-logo { width: 72px; height: 44px; display: grid; place-items: center; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 4px; }
+.cons-logo { width: 92px; height: 58px; display: grid; place-items: center; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 4px; }
 .cons-logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
 .cons-logo .ph { color: #333; font-weight: 700; font-size: 13px; }
 .cons-name { display: grid; gap: 2px; min-width: 0; }
@@ -340,13 +340,13 @@ html .tabbar { top: 0; }
 /* Défilement des consoles : logos */
 .chips { gap: 10px; padding: 4px 2px 10px; }
 .chip.has-logo { padding: 0 12px 0 8px; min-height: 46px; gap: 8px; }
-.chip-logo { display: grid; place-items: center; width: 64px; height: 32px; background: #fff; border-radius: 9px; padding: 3px 6px; }
+.chip-logo { display: grid; place-items: center; width: 76px; height: 42px; background: #fff; border-radius: 9px; padding: 3px 6px; }
 .chip-logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
 .chip-txt { font-size: 11px; font-weight: 700; color: #222; text-align: center; line-height: 1.1; }
 .chip.has-logo[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--accent); }
 .chip.has-logo[aria-pressed="true"] b { color: var(--bg); }
 .shelf-h { font-size: 18px; }
-.shelf-logo { display: grid; place-items: center; width: 64px; height: 34px; flex: none; background: #fff; border-radius: 9px; padding: 3px 6px; }
+.shelf-logo { display: grid; place-items: center; width: 76px; height: 44px; flex: none; background: #fff; border-radius: 9px; padding: 3px 6px; }
 .shelf-logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
 
 </style>
@@ -481,7 +481,7 @@ html .tabbar { top: 0; }
     </div>
     <p class="status info" id="status2" role="status" aria-live="polite"></p>
     <div class="row"><button type="button" class="btn danger" id="btnOut">Se déconnecter</button></div>
-    <p class="sync">Version de l’app : 31 · bêta famille</p>
+    <p class="sync">Photos des consoles : Wikimedia Commons (licences libres).<br>Version de l’app : 32 · bêta famille</p>
   </section>
 </div>
 </div>
@@ -1252,7 +1252,13 @@ html .tabbar { top: 0; }
   /* ---------- Onglet Consoles ---------- */
   var LOGOS = {"NES": "plmo", "Super Nintendo": "ifw2tvdkynyxayquiyk4", "Nintendo 64": "pl78", "GameCube": "pl7a", "Wii": "pl92", "Wii U": "pl6n", "Switch": "plgu", "Switch 2": "plow", "Game Boy": "pl7m", "Game Boy Color": "pl7l", "Game Boy Advance": "pl74", "Virtual Boy": "pl7s", "Nintendo DS": "pl6t", "Nintendo 3DS": "pln6", "PlayStation": "plmb", "PlayStation 2": "pl72", "PlayStation 3": "tuyy1nrqodtmbqajp4jg", "PlayStation 4": "pl6f", "PlayStation 5": "plos", "PSP": "pl5y", "PS Vita": "pl6g", "Xbox": "pl7e", "Xbox 360": "plha", "Xbox One": "pl95", "Xbox Series X|S": "plfl", "32X": "pl7r", "Saturn": "hrmqljpwunky1all3v78", "Dreamcast": "pl7i", "Game Gear": "pl7z", "Atari 2600": "pln4", "Atari 5200": "pl8g", "Atari 7800": "pl8f", "Atari Lynx": "pl82", "Atari Jaguar": "pl7y", "Atari 8 bits (400/800/XL/XE)": "plad", "Atari ST": "pla7", "PC Engine / TurboGrafx-16": "pl88", "Neo Geo AES": "plp1", "Neo Geo CD": "pl7t", "Neo Geo Pocket": "plau", "3DO": "pl7u", "Philips CD-i": "pl80", "Amiga CD32": "pl7v", "ColecoVision": "pl8n", "Intellivision": "pl8o", "Vectrex": "pl8h", "Magnavox Odyssey 2 / Videopac": "fqwnmmpanb5se6ebccm3", "Fairchild Channel F": "pl8s", "WonderSwan": "pl7b", "N-Gage": "pl76", "Game.com": "plgk", "Amstrad CPC": "plnh", "Amstrad GX4000": "plot", "ZX Spectrum": "plab", "Commodore 64": "pll3", "Commodore VIC-20": "pl8p", "Commodore 16 / Plus/4": "plf4", "MSX / MSX2": "pl8j", "Thomson TO7 / MO5 / TO8": "plex", "Apple II": "pl8r", "BBC Micro / Electron": "pl86", "Dragon 32 / 64": "pl8e", "Sharp X68000": "pl8i", "Tandy TRS-80 / Color Computer": "plac", "PC (Windows)": "plim", "PC (MS-DOS)": "sqgw6vespav1buezgjjn", "Mac": "plo3"};
   var consState = { map: {}, filter: 'all', loaded: false };
-  function logoUrl(name) { return LOGOS[name] ? 'https://images.igdb.com/igdb/image/upload/t_logo_med/' + LOGOS[name] + '.png' : ''; }
+  var PHOTOS = {"NES": "Nintendo-Entertainment-System-NES-Console-FL.jpg", "Super Nintendo": "Nintendo-Super-NES-Console-101-FL.jpg", "Nintendo 64": "Nintendo-64-Console-FL.jpg", "GameCube": "GameCube-Set.jpg", "Wii": "Wii-console.jpg", "Wii U": "Nintendo-Wii-U-Console-FL.jpg", "Switch": "Nintendo Switch Console.png", "Switch 2": "Nintendo Switch 2 von oben 20250605 HOF4734-HDR RAW-Export.png", "Game Boy": "Game-Boy-Original.jpg", "Game Boy Color": "Nintendo-Game-Boy-Color-FL.jpg", "Game Boy Advance": "Nintendo-Game-Boy-Advance-Purple-FL.jpg", "Virtual Boy": "Virtual-Boy-Set.png", "Nintendo DS": "Nintendo-DS-Fat-Blue.jpg", "Nintendo 3DS": "Nintendo-3DS-AquaOpen.jpg", "Game & Watch": "Game&watch-donkey-kong-2.jpg", "PlayStation": "PSX-Console-wController.jpg", "PlayStation 2": "Sony-PlayStation-2-30001-Console-FL.jpg", "PlayStation 3": "Sony-PlayStation-PS3-SuperSlim-Console-FL.jpg", "PlayStation 4": "PS4-Console-wDS4.png", "PlayStation 5": "PlayStation 5 and DualSense.jpg", "PSP": "Psp-1000.jpg", "PS Vita": "PlayStation-Vita-1101-FL.jpg", "Xbox": "Xbox-console.jpg", "Xbox 360": "Xbox-360S-Console-Set.jpg", "Xbox One": "Microsoft-Xbox-One-S-Console-FL.png", "Xbox Series X|S": "Xbox Series X 2.jpg", "SG-1000": "Sega-SG-1000-Console-Set.jpg", "Master System": "Sega-Master-System-Set.jpg", "Mega Drive": "Sega-Mega-Drive-JP-Mk1-Console-Set.jpg", "Mega-CD": "SEGA MEGA DRIVE & MEGA-CD.png", "32X": "Sega-Genesis-32X-01.jpg", "Saturn": "Sega-Saturn-Console-Set-Mk2.jpg", "Dreamcast": "Dreamcast-Console-Set.jpg", "Game Gear": "Game-Gear-Handheld.jpg", "Atari 2600": "Atari-2600-Four-Switch-Black-Console-01.jpg", "Atari Jaguar": "Atari-Jaguar-Console-Set.jpg", "Atari Lynx": "Atari-Lynx-II-Handheld-Angled.jpg", "Atari ST": "Atari 1040STf.jpg", "PC Engine / TurboGrafx-16": "PC-Engine-Console-Set.jpg", "Neo Geo AES": "Neo-Geo-AES-Console-Set.jpg", "3DO": "3DO-FZ1-Console-Set.jpg", "Philips CD-i": "CD-i-910-Console-Set.jpg", "Intellivision": "Intellivision-Console-Set.jpg", "Vectrex": "Vectrex-Console-Set.jpg", "Amstrad CPC": "Amstrad CPC464.jpg", "Commodore 64": "Commodore-64-Computer-FL.jpg", "Commodore Amiga": "Amiga 500 Plus (white background).jpg", "ZX Spectrum": "ZXSpectrum48k.jpg"};
+  function logoOf(name) { return LOGOS[name] ? 'https://images.igdb.com/igdb/image/upload/t_logo_med/' + LOGOS[name] + '.png' : ''; }
+  function logoUrl(name) { return PHOTOS[name] ? 'https://commons.wikimedia.org/wiki/Special:FilePath/' + encodeURIComponent(PHOTOS[name]) + '?width=320' : logoOf(name); }
+  document.addEventListener('error', function (e) {
+    var t = e.target;
+    if (t && t.tagName === 'IMG' && t.dataset && t.dataset.logo && !t.dataset.tried) { t.dataset.tried = '1'; t.src = t.dataset.logo; e.stopPropagation(); }
+  }, true);
   function gamesOn(name) { return state.items.filter(function (x) { return x.platform === name; }).length; }
   function isOwned(name) {
     var r = consState.map[name];
@@ -1296,7 +1302,7 @@ html .tabbar { top: 0; }
       box.append(h('h3', { class: 'cons-h', text: m.name }));
       rows.forEach(function (n) {
         var o = isOwned(n), c = gamesOn(n), u = logoUrl(n);
-        var pic = u ? h('img', { src: u, alt: '', loading: 'lazy', referrerpolicy: 'no-referrer' }) : h('div', { class: 'ph', text: initials(n) });
+        var pic = u ? h('img', { src: u, 'data-logo': logoOf(n), alt: '', loading: 'lazy', referrerpolicy: 'no-referrer' }) : h('div', { class: 'ph', text: initials(n) });
         box.append(h('div', { class: 'cons-row' + (o ? ' on' : '') },
           h('div', { class: 'cons-logo' }, pic),
           h('div', { class: 'cons-name' }, h('b', { text: n }), h('span', { text: c ? c + ' jeu' + (c > 1 ? 'x' : '') : 'aucun jeu' })),
@@ -1316,7 +1322,7 @@ html .tabbar { top: 0; }
     p.names.forEach(function (n) {
       var u = logoUrl(n);
       var inner = u
-        ? [h('span', { class: 'chip-logo' }, h('img', { src: u, alt: '', loading: 'lazy', referrerpolicy: 'no-referrer', onerror: function (e) { var t = e.target; t.replaceWith(h('span', { class: 'chip-txt', text: n })); } })), h('b', { text: String(p.counts[n]) })]
+        ? [h('span', { class: 'chip-logo' }, h('img', { src: u, 'data-logo': logoOf(n), alt: '', loading: 'lazy', referrerpolicy: 'no-referrer', onerror: function (e) { var t = e.target; t.replaceWith(h('span', { class: 'chip-txt', text: n })); } })), h('b', { text: String(p.counts[n]) })]
         : [h('i'), n + ' ', h('b', { text: String(p.counts[n]) })];
       var chip = h('button', { type: 'button', class: 'chip' + (u ? ' has-logo' : ''), title: n, 'aria-label': n + ' : ' + p.counts[n] + ' jeu' + (p.counts[n] > 1 ? 'x' : ''), 'aria-pressed': String(state.filterPlat === n), onclick: function () { state.filterPlat = (state.filterPlat === n) ? null : n; state.page = 0; render(); } });
       inner.forEach(function (c) { chip.append(c); });
@@ -1332,7 +1338,7 @@ html .tabbar { top: 0; }
       var u = logoUrl(name);
       if (!u) return;
       var tab = hd.querySelector('.tab');
-      var box = h('span', { class: 'shelf-logo' }, h('img', { src: u, alt: '', loading: 'lazy', referrerpolicy: 'no-referrer', onerror: function () { if (tab && box.parentNode) box.replaceWith(tab); } }));
+      var box = h('span', { class: 'shelf-logo' }, h('img', { src: u, 'data-logo': logoOf(name), alt: '', loading: 'lazy', referrerpolicy: 'no-referrer', onerror: function () { if (tab && box.parentNode) box.replaceWith(tab); } }));
       if (tab) tab.replaceWith(box); else hd.prepend(box);
     });
   }

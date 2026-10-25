@@ -337,6 +337,18 @@ html .tabbar { top: 0; }
 .cons-sw { min-width: 76px; padding: 8px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); font: 700 13px inherit; cursor: pointer; }
 .cons-row.on .cons-sw { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; border-color: transparent; }
 
+/* Défilement des consoles : logos */
+.chips { gap: 10px; padding: 4px 2px 10px; }
+.chip.has-logo { padding: 0 12px 0 8px; min-height: 46px; gap: 8px; }
+.chip-logo { display: grid; place-items: center; width: 64px; height: 32px; background: #fff; border-radius: 9px; padding: 3px 6px; }
+.chip-logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.chip-txt { font-size: 11px; font-weight: 700; color: #222; text-align: center; line-height: 1.1; }
+.chip.has-logo[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--accent); }
+.chip.has-logo[aria-pressed="true"] b { color: var(--bg); }
+.shelf-h { font-size: 18px; }
+.shelf-logo { display: grid; place-items: center; width: 64px; height: 34px; flex: none; background: #fff; border-radius: 9px; padding: 3px 6px; }
+.shelf-logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
 </style>
 </head>
 <body>
@@ -469,7 +481,7 @@ html .tabbar { top: 0; }
     </div>
     <p class="status info" id="status2" role="status" aria-live="polite"></p>
     <div class="row"><button type="button" class="btn danger" id="btnOut">Se déconnecter</button></div>
-    <p class="sync">Version de l’app : 30 · bêta famille</p>
+    <p class="sync">Version de l’app : 31 · bêta famille</p>
   </section>
 </div>
 </div>
@@ -1293,7 +1305,38 @@ html .tabbar { top: 0; }
     });
     if (!box.firstChild) box.append(h('p', { class: 'hint', text: 'Aucune console dans ce filtre.' }));
   }
-  function render() { renderChips(); renderList(); renderConsoles(); }
+
+  function renderChips() {
+    var box = $('#chips');
+    box.textContent = '';
+    var p = sortedPlatformsPresent();
+    if (p.names.length < 2) { box.hidden = true; return; }
+    box.hidden = false;
+    box.append(h('button', { type: 'button', class: 'chip', 'aria-pressed': String(state.filterPlat === null), onclick: function () { state.filterPlat = null; state.page = 0; render(); } }, 'Toutes ', h('b', { text: String(state.items.length) })));
+    p.names.forEach(function (n) {
+      var u = logoUrl(n);
+      var inner = u
+        ? [h('span', { class: 'chip-logo' }, h('img', { src: u, alt: '', loading: 'lazy', referrerpolicy: 'no-referrer', onerror: function (e) { var t = e.target; t.replaceWith(h('span', { class: 'chip-txt', text: n })); } })), h('b', { text: String(p.counts[n]) })]
+        : [h('i'), n + ' ', h('b', { text: String(p.counts[n]) })];
+      var chip = h('button', { type: 'button', class: 'chip' + (u ? ' has-logo' : ''), title: n, 'aria-label': n + ' : ' + p.counts[n] + ' jeu' + (p.counts[n] > 1 ? 'x' : ''), 'aria-pressed': String(state.filterPlat === n), onclick: function () { state.filterPlat = (state.filterPlat === n) ? null : n; state.page = 0; render(); } });
+      inner.forEach(function (c) { chip.append(c); });
+      if (!u) chip.firstChild.style.setProperty('--mk', 'var(--m-' + makerOf(n) + ')');
+      box.append(chip);
+    });
+    if (state.filterPlat && !p.counts[state.filterPlat]) state.filterPlat = null;
+  }
+  function decorateShelves() {
+    document.querySelectorAll('.shelf-h').forEach(function (hd) {
+      if (hd.querySelector('.shelf-logo')) return;
+      var name = Array.prototype.filter.call(hd.childNodes, function (n) { return n.nodeType === 3; }).map(function (n) { return n.textContent; }).join('').trim();
+      var u = logoUrl(name);
+      if (!u) return;
+      var tab = hd.querySelector('.tab');
+      var box = h('span', { class: 'shelf-logo' }, h('img', { src: u, alt: '', loading: 'lazy', referrerpolicy: 'no-referrer', onerror: function () { if (tab && box.parentNode) box.replaceWith(tab); } }));
+      if (tab) tab.replaceWith(box); else hd.prepend(box);
+    });
+  }
+  function render() { renderChips(); renderList(); decorateShelves(); renderConsoles(); }
   function showTab(name) {
     if (name !== 'add') stopScan();
     document.querySelectorAll('[data-view]').forEach(function (v) { v.hidden = v.getAttribute('data-view') !== name; });

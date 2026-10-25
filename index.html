@@ -317,6 +317,7 @@ body { padding-block: 12px 24px; }
 .who { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
 html .tabbar { top: 0; }
 .g-edit { white-space: nowrap; width: 112px; }
+#reader video { width: 100% !important; }
 
 </style>
 </head>
@@ -375,8 +376,13 @@ html .tabbar { top: 0; }
     <h2 id="addH">Ajouter un jeu</h2>
     <div class="row">
       <button type="button" class="btn primary" id="btnScan">Scanner le code-barres</button>
+      <label class="btn">Lire depuis une photo
+        <input class="sr" type="file" id="filePhoto" accept="image/*" capture="environment" aria-label="Photographier le code-barres">
+      </label>
     </div>
+    <p class="hint" id="scanHint" hidden>Place le code-barres du dos de la boîte dans le cadre, bien éclairé, à 15–20 cm. Touche l’écran pour faire la mise au point.</p>
     <div id="reader" hidden></div>
+    <div id="readerFile" hidden></div>
     <div class="form-grid" style="margin-top:10px;">
       <label class="lbl" style="grid-column: 1 / -1;">Code-barres (facultatif)
         <input class="field" id="mBarcode" type="text" inputmode="numeric" placeholder="Scanné ou tapé ici" maxlength="20">
@@ -430,7 +436,7 @@ html .tabbar { top: 0; }
     </div>
     <p class="status info" id="status2" role="status" aria-live="polite"></p>
     <div class="row"><button type="button" class="btn danger" id="btnOut">Se déconnecter</button></div>
-    <p class="sync">Version de l’app : 21 · bêta famille</p>
+    <p class="sync">Version de l’app : 22 · bêta famille</p>
   </section>
 </div>
 </div>
@@ -734,7 +740,7 @@ html .tabbar { top: 0; }
     note.textContent = state.items.length ? (items.length === state.items.length ? state.items.length + ' jeux' : items.length + ' sur ' + state.items.length) : '';
 
     if (!state.items.length) {
-      box.append(h('div', { class: 'empty' }, h('b', { text: 'Ta collection est vide' }), h('p', { text: 'Photographie une boîte ou une étagère, ou tape un titre dans l’onglet Saisie. Les jeux apparaîtront ici, rangés par console.' })));
+      box.append(h('div', { class: 'empty' }, h('b', { text: 'Ta collection est vide' }), h('p', { text: 'Scanne le code-barres d’une boîte ou tape un titre dans l’onglet Ajouter. Tu peux aussi importer une sauvegarde dans Réglages.' })));
       return;
     }
     if (!items.length) {
@@ -979,25 +985,57 @@ html .tabbar { top: 0; }
     try { await scanner.stop(); } catch (e) { /* déjà arrêté */ }
     try { scanner.clear(); } catch (e) { /* ignore */ }
     scanner = null;
-    $('#reader').hidden = true;
+    $('#reader').hidden = true; $('#scanHint').hidden = true;
     $('#btnScan').textContent = 'Scanner le code-barres';
+  }
+  function scanFormats() {
+    var F = window.Html5QrcodeSupportedFormats;
+    return F ? [F.EAN_13, F.UPC_A, F.EAN_8, F.UPC_E, F.CODE_128, F.QR_CODE] : undefined;
+  }
+  function scanOpts() {
+    return { formatsToSupport: scanFormats(), experimentalFeatures: { useBarCodeDetectorIfSupported: true }, verbose: false };
+  }
+  function onCode(text) {
+    var digits = String(text).replace(/\D/g, '');
+    $('#mBarcode').value = (digits || String(text)).slice(0, 20);
+    say('Code lu : ' + $('#mBarcode').value, 'ok');
+    runSearch({ barcode: $('#mBarcode').value });
   }
   async function toggleScan() {
     if (scanner) { await stopScan(); return; }
     if (!window.Html5Qrcode) { say('Le scanner n’est pas disponible. Tape le code à la main.', 'err'); return; }
-    $('#reader').hidden = false;
+    $('#reader').hidden = false; $('#scanHint').hidden = false;
     $('#btnScan').textContent = 'Arrêter le scan';
-    scanner = new window.Html5Qrcode('reader');
+    scanner = new window.Html5Qrcode('reader', scanOpts());
+    var cfg = {
+      fps: 15,
+      qrbox: function (w) { var bw = Math.min(w - 16, 360); return { width: bw, height: Math.round(bw * 0.5) }; },
+      videoConstraints: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 }, advanced: [{ focusMode: 'continuous' }] }
+    };
     try {
-      await scanner.start({ facingMode: 'environment' }, { fps: 10, qrbox: { width: 260, height: 140 } }, async function (text) {
-        await stopScan();
-        $('#mBarcode').value = String(text).replace(/\D/g, '').slice(0, 20) || text.slice(0, 20);
-        runSearch({ barcode: $('#mBarcode').value });
-      }, function () { /* image sans code */ });
+      await scanner.start({ facingMode: 'environment' }, cfg, async function (text) { await stopScan(); onCode(text); }, function () { /* image sans code */ });
     } catch (e) {
-      scanner = null; $('#reader').hidden = true; $('#btnScan').textContent = 'Scanner le code-barres';
-      say('Impossible d’ouvrir la caméra. Autorise-la dans les réglages du navigateur, ou tape le code.', 'err');
+      try {
+        delete cfg.videoConstraints;
+        await scanner.start({ facingMode: 'environment' }, cfg, async function (text) { await stopScan(); onCode(text); }, function () { /* image sans code */ });
+      } catch (e2) {
+        scanner = null; $('#reader').hidden = true; $('#scanHint').hidden = true; $('#btnScan').textContent = 'Scanner le code-barres';
+        say('Impossible d’ouvrir la caméra. Autorise-la dans les réglages du navigateur, ou utilise « Lire depuis une photo ».', 'err');
+      }
     }
+  }
+  async function scanPhoto(file) {
+    if (!file) return;
+    if (!window.Html5Qrcode) { say('Le scanner n’est pas disponible.', 'err'); return; }
+    say('Lecture de la photo…', 'info');
+    var s = new window.Html5Qrcode('readerFile', scanOpts());
+    try {
+      var text = await s.scanFile(file, false);
+      onCode(text);
+    } catch (e) {
+      say('Aucun code-barres lisible sur cette photo. Rapproche-toi, évite les reflets, ou tape le numéro.', 'err');
+    }
+    try { s.clear(); } catch (e) { /* ignore */ }
   }
 
   /* ---------- Export / import ---------- */
@@ -1108,6 +1146,7 @@ html .tabbar { top: 0; }
     fillSimpleSelect($('#mCondition'), CONDITIONS, '', CONDITION_LABEL);
     $('#mPlatform').addEventListener('change', function () { lastPlatSet($('#mPlatform').value); });
     $('#btnScan').addEventListener('click', toggleScan);
+    $('#filePhoto').addEventListener('change', function (e) { scanPhoto(e.target.files && e.target.files[0]); e.target.value = ''; });
     $('#btnFind').addEventListener('click', function () {
       var t = $('#mTitle').value.trim();
       if (!t) { $('#mTitle').focus(); return; }

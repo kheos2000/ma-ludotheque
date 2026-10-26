@@ -355,6 +355,9 @@ html .tabbar { top: 0; }
 .cons-ph { display: flex; gap: 14px; }
 .linkbtn { background: none; border: 0; padding: 4px 0; color: var(--accent); font: 600 12px inherit; cursor: pointer; text-decoration: underline; }
 
+.cons-logo, .chip-logo, .shelf-logo { overflow: hidden; box-sizing: border-box; position: relative; }
+.cons-logo img, .chip-logo img, .shelf-logo img { position: absolute; inset: 4px; width: calc(100% - 8px); height: calc(100% - 8px); max-width: none; max-height: none; object-fit: contain; }
+
 </style>
 </head>
 <body>
@@ -487,7 +490,7 @@ html .tabbar { top: 0; }
     </div>
     <p class="status info" id="status2" role="status" aria-live="polite"></p>
     <div class="row"><button type="button" class="btn danger" id="btnOut">Se déconnecter</button></div>
-    <p class="sync">Photos des consoles : Wikimedia Commons (licences libres).<br>Version de l’app : 34 · bêta famille</p>
+    <p class="sync">Photos des consoles : Wikimedia Commons (licences libres).<br>Version de l’app : 35 · bêta famille</p>
   </section>
 </div>
 </div>
